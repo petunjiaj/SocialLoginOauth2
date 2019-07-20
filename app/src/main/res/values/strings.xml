@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SocialLoginOauth2</string>
+    <string name="facebook_app_id">666082560535392</string>
+    <string name="fb_login_protocol_scheme">fb666082560535392</string>
 </resources>
