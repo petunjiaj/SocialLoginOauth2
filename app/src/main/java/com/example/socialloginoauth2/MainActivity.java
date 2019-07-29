@@ -1,6 +1,7 @@
 package com.example.socialloginoauth2;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,7 +15,7 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
-
+    
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 9001;
     private static final String TAG = "signin google fail-code";
@@ -52,8 +53,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // update activity after login (by result)
     private void updateUI(GoogleSignInAccount account) {
+        // get profile info if account is not null:
         if (account!=null){
-            // todo: signed
+            // get default info from account:
+            String personName = account.getDisplayName();
+            String personGivenName = account.getGivenName();
+            String personFamilyName = account.getFamilyName();
+            String personEmail = account.getEmail();
+            String personId = account.getId();
+            Uri personPhoto = account.getPhotoUrl();
+            // set intent switch activity:
+            Intent intent = new Intent(MainActivity.this, loggedActivity.class);
+            // add intent extra with account infos:
+            intent.putExtra("userName", personName);
+            intent.putExtra("userGivenName", personGivenName);
+            intent.putExtra("userFamilyName", personFamilyName);
+            intent.putExtra("userEmail", personEmail);
+            intent.putExtra("userId", personId);
+            intent.putExtra("userPhoto", personPhoto.toString());
+            // start activity:
+            startActivity(intent);
         }
         else{
             // todo: not signed
