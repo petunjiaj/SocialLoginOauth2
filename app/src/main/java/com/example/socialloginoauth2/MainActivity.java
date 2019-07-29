@@ -2,23 +2,34 @@ package com.example.socialloginoauth2;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 9001;
     private static final String TAG = "signin google fail-code";
+    // add logout button and textview for account info when logged:
+    Button logoutButton, showInfoButton;
+    TextView accountInfo;
+    // arraylist for account-info:
+    ArrayList<String> accountInfos = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +51,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Build a GoogleSignInClient with the options specified by gso.
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        // add textview to show user account if logged (invisible before login):
+        accountInfo = findViewById(R.id.account_info);
+        accountInfo.setVisibility(View.INVISIBLE);
+
+        // add logout button (invisible before login):
+        logoutButton = findViewById(R.id.button_back);
+        logoutButton.setVisibility(View.INVISIBLE);
+        logoutButton.setOnClickListener(this);
+
+        // add more info button (switch activity):
+        showInfoButton = findViewById(R.id.more_info_button);
+        showInfoButton.setVisibility(View.INVISIBLE);
+        showInfoButton.setOnClickListener(this);
     }
 
     @Override
@@ -62,20 +87,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String personEmail = account.getEmail();
             String personId = account.getId();
             Uri personPhoto = account.getPhotoUrl();
-            // set intent switch activity:
-            Intent intent = new Intent(MainActivity.this, loggedActivity.class);
-            // add intent extra with account infos:
-            intent.putExtra("userName", personName);
-            intent.putExtra("userGivenName", personGivenName);
-            intent.putExtra("userFamilyName", personFamilyName);
-            intent.putExtra("userEmail", personEmail);
-            intent.putExtra("userId", personId);
-            intent.putExtra("userPhoto", personPhoto.toString());
-            // start activity:
-            startActivity(intent);
+            // add arraylist for account info:
+            accountInfos.add(personName);
+            accountInfos.add(personGivenName);
+            accountInfos.add(personFamilyName);
+            accountInfos.add(personEmail);
+            accountInfos.add(personId);
+            accountInfos.add(personPhoto.toString());
+
+            // set visibility and content for user info and logout button:
+            findViewById(R.id.sign_in_button).setVisibility(View.INVISIBLE);
+            logoutButton.setVisibility(View.VISIBLE);
+            accountInfo.setVisibility(View.VISIBLE);
+            accountInfo.setText(personName);
+            showInfoButton.setVisibility(View.VISIBLE);
+
+//            // set intent switch activity:
+//            Intent intent = new Intent(MainActivity.this, loggedActivity.class);
+//            // add intent extra with account infos:
+//            intent.putExtra("userName", personName);
+//            intent.putExtra("userGivenName", personGivenName);
+//            intent.putExtra("userFamilyName", personFamilyName);
+//            intent.putExtra("userEmail", personEmail);
+//            intent.putExtra("userId", personId);
+//            intent.putExtra("userPhoto", personPhoto.toString());
+//            // start activity:
+//            startActivity(intent);
         }
         else{
-            // todo: not signed
+            // set visibility for activity items:
+            accountInfo.setText("no info");
+            accountInfo.setVisibility(View.INVISIBLE);
+            logoutButton.setVisibility(View.INVISIBLE);
+            showInfoButton.setVisibility(View.INVISIBLE);
+            findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
+
         }
     }
 
@@ -86,7 +132,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.sign_in_button:
                 signIn();
                 break;
-            // ... todo: other buttons (logout..)
+            case R.id.button_back:
+                signOut();
+                break;
+            case R.id.more_info_button:
+                switchActivity();
         }
     }
 
@@ -98,6 +148,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    private void signOut() {
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        // ...
+                    }
+                });
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        updateUI(account);
+    }
+
+    private void switchActivity(){
+        // set intent switch activity:
+        Intent intent = new Intent(MainActivity.this, loggedActivity.class);
+        // add intent extra with account infos:
+        intent.putExtra("accountInfo", accountInfos);
+        // start activity:
+        startActivity(intent);
+
+    }
     // get a GoogleSignInAccount object for the user in the activity's onActivityResult method.
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
