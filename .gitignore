@@ -13,3 +13,4 @@
 .externalNativeBuild
 app/GoogleCredentials.json
 app/google-services.json
+app/src/main/res/values/strings.xml
